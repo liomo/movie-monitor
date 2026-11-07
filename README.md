@@ -1,20 +1,49 @@
-# 上海《沙丘3》IMAX 公开排片线索监控
+# 上海《沙丘3》IMAX 场次监控
 
-每 30 分钟由 GitHub Actions 尝试检查五家目标影院的公开排片页面。页面同时出现指定关键词且由未命中变为命中时，使用 Server酱发送微信提醒。
+Python + GitHub Actions + Server酱。微信通道已配置；影院数据源目前处于**等待试用验证**状态，尚未证实实时覆盖五家影院。
 
-**当前为待配置版本，尚未实际接通影院排片数据。** 五家影院的 `url` 暂为空，脚本会跳过。只有填入经验证、公开可访问的真实排片页面后才会开始检测。关键词命中不等于放票或有余票；JS 动态加载、登录、验证码及反爬限制不受支持。
+## 当前数据状态
 
-## 配置
-1. 在 `cinemas.json` 中为每家影院填入真实、公开、无需登录的 HTTPS 排片页面地址，并确认响应 HTML 含排片文本。
-2. 打开 GitHub 仓库 **Settings → Secrets and variables → Actions → New repository secret**，创建名为 `SERVERCHAN_SENDKEY` 的 Secret，值为 Server酱 SendKey。不要将密钥提交到仓库。
-3. 在 **Actions → IMAX screening monitor → Run workflow** 手动测试，查看日志中检查数量和错误。
-4. GitHub Actions 按约 30 分钟调度，但运行可能延迟或被暂停。
+- 已填入五家猫眼影院页，作为人工核对和通知的备用跳转地址。
+- 直接 HTTP 访问猫眼排片返回美团“验证中心”，因此这些地址不作为自动排片数据源。
+- 已按 [极速数据电影影讯文档](https://www.jisuapi.com/api/movie/) 实现结构化适配：影院发现、场次、厅型、售票状态、购票链接。
+- 尚未取得 API 凭据，未验证五家覆盖率、预售日期支持或更新延迟。网页搜索缓存不能代替实时数据。
+- 自动数据调用默认关闭。试用报告通过前，不应宣称监控已经接通。
 
-## 本地测试
+## 先做一次覆盖测试
+
+1. 在 [电影影讯](https://www.jisuapi.com/api/movie/) 申请试用接口，暂不充值或购买套餐。官方页面当前写明申请送 100 次；最终以账户显示为准。
+2. 在本仓库 Settings → Secrets and variables → Actions → Secrets 新建 `JISU_API_KEY`。密钥不要发到聊天或写入代码。原有 `SERVERCHAN_SENDKEY` 继续保留。
+3. Actions → IMAX screening monitor → Run workflow：仅勾选 `probe_source`，运行。
+4. 下载该次运行的 `source-diagnostic`，查看 `source_report.json`。这一步不发微信、不改去重状态。默认最多请求 11 次（一次上海影院发现 + 五家各查今天和目标日期），不重试。
+5. 逐家检查候选影院名称与地址。荟聚必须是上海长宁金钟路店，不能用无锡等同名店。将确认的 API ID 和返回的完整影院名填入各项 `jisu_theater_id`、`jisu_verified_name`。**猫眼 ID 与极速数据 ID 不通用。**
+6. 今天的样本应与售票平台对得上；核对 IMAX 厅、场次及查询时间。目标日期返回空只记为 `empty_unverified`，不能据此推断未放票。若影院缺失、日期不支持、数据过旧，不要启用。
+
+目前 `monitor_dates` 为此前约定关注的 2026-12-31；这只是查询日期，不构成上映日期确认。可在配置中增改日期（最多 7 天）。该接口按日期查询，不会自动扫描全部未来预售日期。
+
+## 验证后启用
+
+在 Actions → Variables 新建 `LIVE_MONITOR_ENABLED=true` 后，现有约每 30 分钟计划才开始调用数据接口。先确认所有影院映射、覆盖情况及可用额度。GitHub 调度可能延迟。
+
+按五家影院、一个日期、每天 48 次运行计算，约 **240 次 API 请求/天**；每增加一天查询日期再加 240 次/天。100 次试用不足以长期监控。此仓库不办理充值，也不自动购买套餐；没有内置每日配额控制，额度和服务费用请在供应商后台限制。是否能及时发现放票取决于供应商的更新延迟，文档未承诺更新时效。
+
+## 检测逻辑
+
+- 片名按明确别名完全匹配，避免《沙丘2》或其他影片误报。
+- 同一条场次的厅名/格式包含 IMAX，且开场时间未过，才算目标 IMAX 场次。
+- 仅对接口 `issale=1` 的场次发送新增可售提醒。这不代表座位余量或锁座成功。
+- 新场次、原不可售后来可售都可触发；按影院、影片、日期、时间、厅与格式去重。
+- 发送成功才写入已通知状态。数据请求失败或返回空不会清掉历史去重记录。
+- 报告区分缺凭据、未映射、空数据与请求错误；错误不等于“没有票”。
+- API 不提供已验证的源数据更新时间，报告时间只是本次查询时间。
+
+## 运行与测试
+
 ```bash
 pip install -r requirements.txt
-export SERVERCHAN_SENDKEY="your-key"
-python monitor.py
+python -m unittest discover -s tests -v
+python monitor.py --probe
 ```
 
-脚本使用 `state.json` 保存上次检测结果，仅在关键词首次出现或从未命中转为命中时提醒。若 SendKey 未配置，不会将新信号标记为已通知。请注意：如果 SendKey 曾被公开分享，应先在 Server酱平台轮换密钥。
+本地运行通过环境变量配置密钥。没有 `LIVE_MONITOR_ENABLED=true` 时普通运行不会调用数据接口；probe 仍需 API key，且会消耗额度。
+

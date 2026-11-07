@@ -1,28 +1,69 @@
 {
-  "keywords": [
-    "沙丘",
-    "IMAX"
-  ],
   "cinemas": [
     {
       "name": "上海寰映影城大融城店",
-      "url": ""
+      "url": "https://www.maoyan.com/cinema/25428",
+      "maoyan_id": 25428,
+      "lookup_tokens": [
+        "寰映",
+        "大融城"
+      ],
+      "jisu_theater_id": "",
+      "jisu_verified_name": ""
     },
     {
       "name": "上海正大乐影城正大广场IMAX店",
-      "url": ""
+      "url": "https://www.maoyan.com/cinema/42020",
+      "maoyan_id": 42020,
+      "lookup_tokens": [
+        "正大",
+        "正大广场"
+      ],
+      "jisu_theater_id": "",
+      "jisu_verified_name": ""
     },
     {
       "name": "MOViE MOViE影城前滩太古里店",
-      "url": ""
+      "url": "https://www.maoyan.com/cinema/37534",
+      "maoyan_id": 37534,
+      "lookup_tokens": [
+        "MOViE MOViE",
+        "前滩"
+      ],
+      "jisu_theater_id": "",
+      "jisu_verified_name": ""
     },
     {
       "name": "上海万达影城五角场万达广场店",
-      "url": ""
+      "url": "https://www.maoyan.com/cinema/226",
+      "maoyan_id": 226,
+      "lookup_tokens": [
+        "万达",
+        "五角场"
+      ],
+      "jisu_theater_id": "",
+      "jisu_verified_name": ""
     },
     {
       "name": "上海寰映影城荟聚店",
-      "url": ""
+      "url": "https://www.maoyan.com/cinema/40271",
+      "maoyan_id": 40271,
+      "lookup_tokens": [
+        "寰映",
+        "荟聚"
+      ],
+      "jisu_theater_id": "",
+      "jisu_verified_name": ""
     }
+  ],
+  "target_titles": [
+    "沙丘3",
+    "沙丘：第三部",
+    "沙丘第三部",
+    "Dune: Part Three"
+  ],
+  "monitor_dates": [
+    "2026-12-31"
   ]
 }
+
