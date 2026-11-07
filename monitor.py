@@ -28,7 +28,8 @@ def send_wechat(items):
         endpoint = f"https://sctapi.ftqq.com/{key}.send"
     else:
         raise ValueError("Unsupported ServerChan key prefix")
-    response = requests.post(\n        endpoint,
+    response = requests.post(
+        endpoint,
         data={"title": "沙丘3 IMAX 排片线索", "desp": body},
         timeout=20,
     )
