@@ -3,6 +3,12 @@ on:
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
+    inputs:
+      test_notification:
+        description: 'Send a test notification (no cinema data required)'
+        type: boolean
+        required: false
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -18,7 +24,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
+      - name: Test notification
+        if: github.event_name == 'workflow_dispatch' && inputs.test_notification == true
+        env:
+          SERVERCHAN_SENDKEY: ${{ secrets.SERVERCHAN_SENDKEY }}
+        run: python -c 'from monitor import send_wechat; assert send_wechat([("通知通道测试", "https://github.com/liomo/movie-monitor")])'
       - name: Monitor
+        if: github.event_name != 'workflow_dispatch' || inputs.test_notification != true
         env:
           SERVERCHAN_SENDKEY: ${{ secrets.SERVERCHAN_SENDKEY }}
         run: python monitor.py
