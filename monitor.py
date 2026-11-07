@@ -19,8 +19,7 @@ def send_wechat(items):
         return False
     body = "\n\n".join(f"- {name}: {url}" for name, url in items)
     body += "\n\n注意：仅检测到网页关键词，不代表已确认放票或可购买。请前往售票平台核实。"
-    response = requests.post(
-        f"https://sctapi.ftqq.com/{key}.send",
+    if key.startswith("sctp"):\n        match = re.match(r"^sctp(\\d+)t", key)\n        if not match:\n            raise ValueError("Invalid ServerChan3 key format")\n        endpoint = f"https://{match.group(1)}.push.ft07.com/send/{key}.send"\n    elif key.startswith("SCT"):\n        endpoint = f"https://sctapi.ftqq.com/{key}.send"\n    else:\n        raise ValueError("Unsupported ServerChan key prefix")\n    response = requests.post(\n        endpoint,
         data={"title": "沙丘3 IMAX 排片线索", "desp": body},
         timeout=20,
     )
